@@ -1,0 +1,54 @@
+// TOF250
+// connected to Arduino Uno Wifi board of I2C
+// note wire colors and code from blog (red power, black ground, blue SDA, green SCL) otherwise not in spec sheets 
+// some code taken from chinese blog site https://blog.csdn.net/HCJ_Application/article/details/124058324
+
+#include <Wire.h>
+
+#define REG_00H 0x00
+#define REG_01L 0x00
+int TOF250_Address = 82;
+
+unsigned int TOF250_Dist = 0;
+
+void setup() {
+  // put your setup code here, to run once:
+  Wire.begin();
+  Serial.begin(115200);
+  delay(100);
+
+}
+
+void Get_LidarDatafromIIC(int address) {
+  char i = 0;
+  byte rx_buf[2] = {0};
+  Wire.beginTransmission(address);
+  Wire.write(REG_00H);
+  Wire.endTransmission();
+  Wire.requestFrom(address, 2);
+
+  while ( Wire.available())
+  {
+    rx_buf[i] = Wire.read();
+    i++;
+    if (i >= 2)
+    {
+      i = 0;
+      TOF250_Dist = rx_buf[0] * 256 + rx_buf[1];
+    }
+  }
+}
+
+void Serial_PrintResult()
+{
+  Serial.print("Dist = ");
+  Serial.print(TOF250_Dist);
+  Serial.println(" CM");
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  Get_LidarDatafromIIC(TOF250_Address);
+  Serial_PrintResult();
+  delay(50);
+}
